@@ -4,7 +4,9 @@ from math import sqrt
 import scipy
 from scipy.optimize.linesearch import scalar_search_wolfe2
 from scipy.linalg import cho_factor, cho_solve
+from scipy.sparse import csr_matrix, diags
 from datetime import datetime
+from scipy.linalg import norm
 from collections import defaultdict
 from time import clock
 
@@ -176,7 +178,7 @@ def gradient_descent(oracle, x_0, tolerance=1e-5, max_iter=10000,
     line_search_tool = get_line_search_tool(line_search_options)
     x_k = np.copy(x_0)
     
-    norm_grad_0 = (oracle.grad(x_0) ** 2).sum()
+    norm_grad_0 = norm(oracle.grad(x_0)) ** 2
     
     alpha = None
     
@@ -193,7 +195,10 @@ def gradient_descent(oracle, x_0, tolerance=1e-5, max_iter=10000,
         if (grad_k is None) or (np.isnan(grad_k).sum() != 0) or (np.isinf(func_k).sum() != 0):
             message = 'computational_error'
             return x_k, message, history
-        norm_grad_k = (grad_k ** 2).sum()
+        norm_grad_k = norm(grad_k) ** 2
+        if norm_grad_k > 1e100:
+            message = 'computational_error'
+            return x_k, message, history
         
         # History of iterations
         if trace:
@@ -301,7 +306,7 @@ def newton(oracle, x_0, tolerance=1e-5, max_iter=100,
             message = 'computational_error'
             return x_k, message, history
         hess_k = oracle.hess(x_k)
-        if (hess_k is None) or (np.isnan(hess_k).sum() != 0) or (np.isinf(hess_k).sum() != 0):
+        if (hess_k is None) or np.isnan(hess_k.data).any() or np.isinf(hess_k.data).any():
             message = 'computational_error'
             return x_k, message, history
         norm_grad_k = (grad_k ** 2).sum()
