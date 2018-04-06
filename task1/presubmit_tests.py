@@ -77,7 +77,7 @@ def check_log_reg(oracle_type, sparse=False):
     x = np.zeros(2)
     d = np.ones(2)
     assert_almost_equal(logreg.func_directional(x, d, alpha=0.5),
-                        0.7386407091095)
+                            0.7386407091095)
     assert_almost_equal(logreg.grad_directional(x, d, alpha=0.5),
                         0.4267589549159)
     assert_almost_equal(logreg.func_directional(x, d, alpha=1.0),
